@@ -35,7 +35,7 @@ const getOneProduct = AsyncError(async (req, res, next) => {
   if (!product) {
     return next(new AppError("Can't find Product"));
   }
-  res.json({ sucess: true, messaage: "Hereis your product", product });
+  res.json({ sucess: true, messaage: "Here is your product", product });
 });
 
 const updateProduct = AsyncError(async (req, res, next) => {
@@ -60,7 +60,6 @@ const deleteProduct = AsyncError(async (req, res, next) => {
 
   res.json({ sucess: true, messaage: "Product deleted" });
 });
-
 module.exports = {
   createProduct,
   getAllProduct,

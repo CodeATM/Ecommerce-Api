@@ -38,11 +38,11 @@ reviewSchema.pre(/^find/, function (next) {
   next();
 });
 
-reviewSchema.statics.calcAverageRatings = async function (id) {
+reviewSchema.statics.calcAverageRatings = async function (productId) {
     console.log('calcuating')
   const stats = await this.aggregate([
     {
-      $match: { product: id },
+      $match: { product: productId },
     },
     {
       $group: {
@@ -55,12 +55,12 @@ reviewSchema.statics.calcAverageRatings = async function (id) {
   // console.log(stats);
 
   if (stats.length > 0) {
-    await Product.findByIdAndUpdate(id, {
+    await Product.findByIdAndUpdate(productId, {
       ratingsQuantity: stats[0].nRating,
       ratingsAverage: stats[0].avgRating,
     });
   } else {
-    await Tour.findByIdAndUpdate(id, {
+    await Product.findByIdAndUpdate(productId, {
       ratingsQuantity: 0,
       ratingsAverage: 4.5,
     });
