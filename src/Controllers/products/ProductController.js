@@ -31,7 +31,7 @@ const getOneProduct = AsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new AppError("There is no product id"));
   }
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate('reviews');
   if (!product) {
     return next(new AppError("Can't find Product"));
   }

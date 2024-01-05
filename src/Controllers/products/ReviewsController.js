@@ -35,14 +35,14 @@ const getProductReviews = AsyncError(async (req, res, next) => {
   }
 
   const productReviews = await Review.find({ product: product.id })
-    .populate({
-      path: "product",
-      select: "id name description",
-    })
-    .populate({
-      path: "user",
-      select: "id firstname email",
-    });
+    // .populate({
+    //   path: "product",
+    //   select: "id name description",
+    // })
+    // .populate({
+    //   path: "user",
+    //   select: "id firstname email",
+    // });
   res.json({
     sucess: true,
     messaage: "Here are the product reviews",
