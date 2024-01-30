@@ -4,4 +4,3 @@ node_modules/
 config/
 dist
 bundle.js*
-package-lock.json

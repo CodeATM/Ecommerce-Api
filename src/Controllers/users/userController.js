@@ -11,76 +11,90 @@ const jsontoken = (id) => {
   });
 };
 
-
 //Get user
 const getUser = AsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user.id)
-    // .populate("Cart")
-    // .populate("Wishlist")
-    // .populate("Order");
+  const user = await User.findById(req.user.id);
+  // .populate("Cart")
+  // .populate("Wishlist")
+  // .populate("Order");
 
   if (!user) {
-    return next(new AppError("user not found", 401));
+    res.json({
+      sucess: false,
+      message: "User not found",
+    });
   }
 
-  res.json({ sucess: true, messaage: "User Profile", user });
+  res.json({ sucess: true, message: "User Profile", user });
 });
-
 
 //Change user details
 const updateUserData = AsyncError(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.user,
-    { $set: req.body},
+    { $set: req.body },
     { new: true }
   );
   if (!updatedUser) {
-    return next(new AppError("Unable to update user now"));
+    res.json({
+      sucess: false,
+      message: "Unable to update user now.",
+    });
   }
-  res.json(updatedUser);
+  res.json({
+    sucess: true,
+    message: "User updated",
+    updatedUser,
+  });
 });
-
 
 //Change user password when the user is logged in
 const changePassword = AsyncError(async (req, res, next) => {
   const user = await User.findById(req.user.id).select("+password");
 
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    return next(new AppError("Incorrect email or password", 404));
+    res.json({
+      sucess: false,
+      message: "Incorrect Password",
+    });
   }
 
   user.password = req.body.password;
   user.confirmPassword = req.body.confirmPassword;
   await user.save();
 
-
   const token = jsontoken(user._id);
-  res.json({ sucess: true, messaage: "Password updated", token });
+  res.json({ sucess: true, message: "Password updated", token });
 });
 
+const updateUserImage = AsyncError(async (req, res, next) => {
+  // const user = req.user.id
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.json({
+      sucess: false,
+      message: "User not found",
+    });
+  }
 
-const updateUserImage = AsyncError(async(req, res, next) =>{
-    // const user = req.user.id
-    const user = await User.findById(req.user.id)
-    if (!user) {
-        return next(new AppError("User not found", 404));
-    }
+  if (!req.file.path) {
+    res.json({
+      sucess: false,
+      message: "unable to upload user image.",
+    });
+  }
 
-    if (!req.file.path) {
-        return next(new AppError("No file uploaded", 404));
-    }
+  const imagePath = req.file.path;
 
-    const imagePath = req.file.path;
+  const image = await uploadToCloudinary(imagePath);
 
-    const image = await uploadToCloudinary(imagePath)
-
-    console.log(image)
-    const updatedUser = await User.findByIdAndUpdate(
-        req.user.id, // use req.user.id directly
-        { $set: { userImage: image } },
-        { new: true }
-    );
-    res.json({ sucess: true, messaage: "Iage uploaded",updatedUser});
-})
+  console.log(image);
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id, // use req.user.id directly
+    { $set: { userImage: image } },
+    { new: true }
+  );
+  res.json({ sucess: true, message: "Iage uploaded", updatedUser });
+});
 
 module.exports = { getUser, updateUserData, changePassword, updateUserImage };

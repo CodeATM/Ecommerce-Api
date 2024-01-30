@@ -11,17 +11,33 @@ const jsontoken = (id) => {
   });
 };
 
+//send cookies
+const createToken = (user, statusCode, req, res) => {
+  const token = jsontoken(user._id);
+
+  res.cookie("jwt", token, {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true, // cookie cannot be accessed or modified in any way by the browser
+    secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+  });
+
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    user,
+  });
+};
+
 //Register user
 const registerUser = AsyncError(async (req, res, next) => {
   const user = await User.create(req.body);
 
-  const token = jsontoken(user._id);
-  res.json({
-    sucess: true,
-    messaage: "Account created successfuly",
-    token,
-    user,
-  });
+  createToken(user, 201, req, res);
 });
 
 //Login user
@@ -37,8 +53,7 @@ const loginUser = AsyncError(async (req, res, next) => {
     return next(new AppError("Incorrect email or password", 404));
   }
 
-  const token = jsontoken(user._id);
-  res.json({ sucess: true, messaage: "Account logged in successfuly", token });
+  createToken(user, 200, req, res);
 });
 
 //forget Password
@@ -82,13 +97,7 @@ const resetPassword = AsyncError(async (req, res, next) => {
   user.confirmPassword = req.body.confirmPassword;
   await user.save();
 
-  const token = jsontoken(user._id);
-
-  res.json({
-    success: "success",
-    message: "Password changed successfully",
-    token,
-  });
+  createToken(user, 200, req, res);
 });
 
 module.exports = { registerUser, loginUser, forgetPassword, resetPassword };

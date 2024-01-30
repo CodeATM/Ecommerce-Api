@@ -1,7 +1,7 @@
 // routes.js
 const express = require("express");
 const router = express.Router();
-const { verifyJWT } = require("../Middleware/verification");
+const { verifyJWT, restrictTo } = require("../Middleware/verification");
 const {
   createProduct,
   getAllProduct,
@@ -9,10 +9,7 @@ const {
   getOneProduct,
   deleteProduct,
 } = require("../Controllers/products/ProductController");
-const {
-  addToCart,
-  removeFromCart,
-} = require("../Controllers/orders/cartController");
+
 const {
   createCollection,
   addProductToCollection,
@@ -25,29 +22,47 @@ const {
 router.get("/Collection", verifyJWT, getCollection);
 
 // Product Routes
-router.post("/createProduct", verifyJWT, createProduct);
+router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct);
 router.get("/", getAllProduct);
-router.get("/:id", getOneProduct);
-router.put("/updateProduct/:id", verifyJWT, updateProduct);
-router.delete("/deleteProduct/:id", verifyJWT, deleteProduct);
-
-//cart and order routes
-router.post("/addToCart/:productID", verifyJWT, addToCart);
-router.post("/removeFromCart/:productID", verifyJWT, removeFromCart);
+router.get("/:productId", getOneProduct);
+router.put("/updateProduct/:id", verifyJWT, restrictTo("admin"), updateProduct);
+router.delete(
+  "/deleteProduct/:id",
+  verifyJWT,
+  restrictTo("admin"),
+  deleteProduct
+);
 
 //collection route
-router.post("/createCollection", verifyJWT, createCollection);
+router.post(
+  "/createCollection",
+  verifyJWT,
+  restrictTo("admin"),
+  createCollection
+);
 router.post(
   "/addProductToCollection/:productID",
   verifyJWT,
+  restrictTo("admin"),
   addProductToCollection
 );
 router.post(
   "/removeProductToCollection/:productID",
   verifyJWT,
+  restrictTo("admin"),
   removeProductToCollection
 );
-router.delete("/deleteCollection/:collectionID", verifyJWT, deleteCollection);
-router.put("/updateCollection/:collectionID", verifyJWT, updateCollection);
+router.delete(
+  "/deleteCollection/:collectionID",
+  verifyJWT,
+  restrictTo("admin"),
+  deleteCollection
+);
+router.put(
+  "/updateCollection/:collectionID",
+  verifyJWT,
+  restrictTo("admin"),
+  updateCollection
+);
 
 module.exports = router;

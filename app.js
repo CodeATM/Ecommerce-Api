@@ -38,6 +38,7 @@ app.get("/", (req, res, next) => {
 app.use("/user", require("./src/Routes/userRoutes"));
 app.use("/product", require("./src/Routes/productRoutes"));
 app.use("/review", require("./src/Routes/reviewRoutes"));
+app.use("/order", require("./src/Routes/orderCartRoutes"));
 
 
 app.all("*", (req, res, next) => {
@@ -49,30 +50,3 @@ app.use(globalErrorHandler)
 app.listen(PORT, () => {
   console.log(`Backend is running on port ${PORT}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // "inStock": 40,
-  // "categories": [
-  //   "Male",
-  //   "kids",
-  //   "Female"
-  //   ],
-  // "sizes": 
-  //     [ "small", "Large"]
-      // "description": "it is white",
-  // "price": 500,

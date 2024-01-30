@@ -30,4 +30,12 @@ const collectionSchema = new mongoose.Schema(
   }
 );
 
+collectionSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "product",
+    select: "name description images",
+  });
+  next();
+});
+
 module.exports = mongoose.model("Collection", collectionSchema);

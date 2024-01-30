@@ -6,12 +6,14 @@ const User = require("../../Model/userModel");
 const getAllUser = AsyncError(async (req, res, next) => {
   const user = await User.findById(req.user);
   if (!user.isAdmin == true) {
-    new AppError("You are not authorized to get all users", 404);
+    res.json({
+      sucess: false,
+      message: "You are not authorized to do this",
+    });
   }
 
   const allUsers = await User.find();
-  res.json({ sucess: true, messaage: "Here are all the users", allUsers });
+  res.json({ sucess: true, message: "Here are all the users", allUsers });
 });
 
-
-module.exports = { getAllUser, };
+module.exports = { getAllUser };

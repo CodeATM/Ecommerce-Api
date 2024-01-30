@@ -5,27 +5,21 @@ const Product = require("../../Model/ProductModel");
 
 //get collections
 const getCollection = AsyncError(async (req, res, next) => {
-  const collection = await Collection.find().populate({
-    path: "product",
-    select: "id name description",
-  });
-  res.json({
+  const collection = await Collection.find()
+  res.status(200).json({
     sucess: true,
-    messaage: "here are the collection",
+    message: "here are the collection",
     collection,
   });
 });
 
 //create collection
 const createCollection = AsyncError(async (req, res, next) => {
-  if (!req.user.isAdmin == "false") {
-    return next(new AppError("You are not authorized to do this"));
-  }
 
   const collection = await Collection.create(req.body);
-  res.json({
+  return res.status(200).json({
     sucess: true,
-    messaage: "Collection created",
+    message: "Collection created",
     collection,
   });
 });
@@ -34,25 +28,28 @@ const createCollection = AsyncError(async (req, res, next) => {
 const addProductToCollection = AsyncError(async (req, res, next) => {
   const { collectionID } = req.body;
   const { productID } = req.params;
-  if (!req.user.isAdmin == "false") {
-    return next(new AppError("You cannot Perform this action"));
-  }
 
   const product = await Product.findById(productID);
   if (!product) {
-    return next(new AppError("can't find a product with this ID"));
+    return res.status(404).json({
+      sucess: false,
+      message: "No Product found with this ID",
+    });
   }
   const existingCollection = await Collection.findById(collectionID);
   if (!existingCollection) {
-    return next(new AppError("can't find a collection with this ID"));
+    return res.status(404).json({
+      sucess: false,
+      message: "No Collection found",
+    });
   }
 
   existingCollection.product.push(product.id);
 
   const updatedCollection = await existingCollection.save();
-  res.json({
+  return res.status(200).json({
     sucess: true,
-    messaage: "Product adde to Collection",
+    message: "Product added to Collection",
     updatedCollection,
   });
 });
@@ -61,25 +58,28 @@ const addProductToCollection = AsyncError(async (req, res, next) => {
 const removeProductToCollection = AsyncError(async (req, res, next) => {
   const { collectionID } = req.body;
   const { productID } = req.params;
-  if (!req.user.isAdmin == "false") {
-    return next(new AppError("You cannot Perform this action"));
-  }
 
   const product = await Product.findById(productID);
   if (!product) {
-    return next(new AppError("can't find a product with this ID"));
+    return res.status(404).json({
+      sucess: false,
+      message: "No product foun with this ID",
+    });
   }
   const existingCollection = await Collection.findById(collectionID);
   if (!existingCollection) {
-    return next(new AppError("can't find a collection with this ID"));
+    return res.status(404).json({
+      sucess: false,
+      message: "Cannot find collection with this ID",
+    });
   }
 
   existingCollection.product.pull(product.id);
 
   const updatedCollection = await existingCollection.save();
-  res.json({
+  return res.status(200).json({
     sucess: true,
-    messaage: "Product adde to Collection",
+    message: "Product added to Collection",
     updatedCollection,
   });
 });
@@ -87,30 +87,30 @@ const removeProductToCollection = AsyncError(async (req, res, next) => {
 //delete Collection
 const deleteCollection = AsyncError(async (req, res, next) => {
   const { collectionID } = req.params;
-  if (!req.user.isAdmin === false) {
-    return next(new AppError("You are not authorized to do this"));
-  }
   const collection = await Collection.findById(collectionID);
   if (!collection) {
-    return next(new AppError("Colloection not found", 404));
+    return res.status(404).json({
+      sucess: false,
+      message: "Collection not found",
+    });
   }
 
   const deleteCollection = await Collection.findByIdAndDelete(collectionID);
-  res.json({
+  return res.status(200).json({
     sucess: true,
-    messaage: "Collection deleted",
+    message: "Collection deleted",
   });
 });
 
 //update collection
 const updateCollection = AsyncError(async (req, res, next) => {
   const { collectionID } = req.params;
-  if (!req.user.isAdmin === false) {
-    return next(new AppError("You are not authorized to do this"));
-  }
   const collection = await Collection.findById(collectionID);
   if (!collection) {
-    return next(new AppError("Colloection not found"));
+    return res.status(404).json({
+      sucess: false,
+      message: "No collection found",
+    });
   }
 
   const updatedUser = await Collection.findByIdAndUpdate(
@@ -118,9 +118,9 @@ const updateCollection = AsyncError(async (req, res, next) => {
     { $set: req.body },
     { new: true }
   );
-  res.json({
+  return res.status(200).json({
     sucess: true,
-    messaage: "Collection deleted",
+    message: "Collection deleted",
     updatedUser,
   });
 });

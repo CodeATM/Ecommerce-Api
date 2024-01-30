@@ -4,14 +4,10 @@ const AppError = require("../../utils/ErrorHandler");
 const Filtering = require("../../utils/Filtering");
 
 const createProduct = AsyncError(async (req, res, next) => {
-  if ((req.user.isAdmin = false)) {
-    return next(new AppError("You cant't do this"));
-  }
-
   const product = await Product.create(req.body);
   res.json({
     sucess: true,
-    messaage: "Product created successfuly",
+    message: "Product created successfuly",
     product,
   });
 });
@@ -24,23 +20,32 @@ const getAllProduct = AsyncError(async (req, res, next) => {
     .paginate();
   const product = await features.query;
 
-  res.json({ sucess: true, messaage: "Here are your product", product });
+  res.json({ sucess: true, message: "Here are your product", product });
 });
 
 const getOneProduct = AsyncError(async (req, res, next) => {
-  if (!req.params.id) {
-    return next(new AppError("There is no product id"));
+  if (!req.params.productId) {
+    res.json({
+      sucess: false,
+      message: "Product not found",
+    });
   }
-  const product = await Product.findById(req.params.id).populate('reviews');
+  const product = await Product.findOne({_id : req.params.productId});
   if (!product) {
-    return next(new AppError("Can't find Product"));
+    res.json({
+      sucess: false,
+      message: "Product not found",
+    });
   }
-  res.json({ sucess: true, messaage: "Here is your product", product });
+  res.json({ sucess: true, message: "Here is your product", product });
 });
 
 const updateProduct = AsyncError(async (req, res, next) => {
   if ((req.user.isAdmin = false)) {
-    return next(new AppError("You are not authorize to do this!"));
+    res.json({
+      sucess: false,
+      message: "You are not authorized to do this.",
+    });
   }
 
   const updatedProduct = await Product.findByIdAndUpdate(
@@ -48,17 +53,20 @@ const updateProduct = AsyncError(async (req, res, next) => {
     { $set: req.body },
     { new: true }
   );
-  res.json({ sucess: true, messaage: "Product Updated", updatedProduct });
+  res.json({ sucess: true, message: "Product Updated", updatedProduct });
 });
 
 const deleteProduct = AsyncError(async (req, res, next) => {
   if (!req.user && !req.user.isAdmin == truee) {
-    return next(new AppError("You are not authorize to do this!"));
+    res.json({
+      sucess: false,
+      message: "You are not authorized to do this",
+    });
   }
 
   const deleteProduct = await Product.findByIdAndDelete(req.params.id);
 
-  res.json({ sucess: true, messaage: "Product deleted" });
+  res.json({ sucess: true, message: "Product deleted" });
 });
 module.exports = {
   createProduct,

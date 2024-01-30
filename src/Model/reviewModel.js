@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Product = require("../Model/userModel");
+const Product = require("../Model/ProductModel");
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -27,19 +27,17 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-reviewSchema.index({ product: 1, user: 1 }, { unique: true });
+reviewSchema.index({ product: 1, user: 1 });
 
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
     path: "user",
-    select: "name ",
+    select: "firstname email ",
   });
-
   next();
 });
 
 reviewSchema.statics.calcAverageRatings = async function (productId) {
-    console.log('calcuating')
   const stats = await this.aggregate([
     {
       $match: { product: productId },
@@ -52,7 +50,7 @@ reviewSchema.statics.calcAverageRatings = async function (productId) {
       },
     },
   ]);
-  // console.log(stats);
+  console.log(stats);
 
   if (stats.length > 0) {
     await Product.findByIdAndUpdate(productId, {
@@ -69,20 +67,21 @@ reviewSchema.statics.calcAverageRatings = async function (productId) {
 
 reviewSchema.post("save", function () {
   // this points to current review
+  console.log('here')
   this.constructor.calcAverageRatings(this.product);
 });
 
 // findByIdAndUpdate
 // findByIdAndDelete
-reviewSchema.pre(/^findOneAnd/, async function (next) {
-  this.rev = await this.findOne();
-  console.log(this.rev);
+reviewSchema.pre(/^findOneAnd/, function (next) {
+  this.rev =  this.findOne();
+  // console.log(this.r);
   next();
 });
 
-reviewSchema.post(/^findOneAnd/, async function () {
+reviewSchema.post(/^findOneAnd/, function () {
   // await this.findOne(); does NOT work here, query has already executed
-  await this.rev.constructor.calcAverageRatings(this.rev.product);
+   this.rev.constructor.calcAverageRatings(this.rev.product);
+   console.log(this.r)
 });
-
 module.exports = mongoose.model("Review", reviewSchema);

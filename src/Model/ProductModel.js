@@ -70,7 +70,9 @@ const productSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+// tourSchema.index({ price: 1 });
 productSchema.index({ price: 1, ratingsAverage: -1 });
+productSchema.index({ slug: 1 });
 
 // Virtual populate
 productSchema.virtual('reviews', {
@@ -78,6 +80,5 @@ productSchema.virtual('reviews', {
   foreignField: 'product',
   localField: '_id'
 });
-
 
 module.exports = mongoose.model("Product", productSchema);

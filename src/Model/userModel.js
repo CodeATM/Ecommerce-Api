@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, "Input a password"],
-    Select: false,
+    Selected: false,
   },
   confirmPassword: {
     type: String,
@@ -51,9 +51,10 @@ const userSchema = new mongoose.Schema({
       message: "Password and confirm password are not the same",
     },
   },
-  isAdmin : {
-    type: Boolean,
-    default: false
+  role: {
+    type: String,
+    enum: ['user','admin'],
+    default: 'user'
   },
   userImage: String,
   passwordResetToken: String,
