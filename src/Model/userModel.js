@@ -18,28 +18,10 @@ const userSchema = new mongoose.Schema({
     unique: [true, "This email has been used before"],
     validate: [validator.isEmail, "please add a valid emai"],
   },
-  cart: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-    },
-  ],
-  wishlist: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Wishlist",
-    },
-  ],
-  orders: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-    },
-  ],
   password: {
     type: String,
     required: [true, "Input a password"],
-    Selected: false,
+    select: false
   },
   confirmPassword: {
     type: String,
@@ -55,6 +37,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user','admin'],
     default: 'user'
+  },
+  restricted: {
+    type: String,
+    default: false,
   },
   userImage: String,
   passwordResetToken: String,
@@ -85,8 +71,26 @@ userSchema.methods.createPasswordResetToken = function () {
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-    this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+    this.paswordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
+
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+    return JWTTimestamp < changedTimestamp;
+  }
+  // False means NOT changed
+  return false;
+};
+
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 
 module.exports = mongoose.model("User", userSchema);

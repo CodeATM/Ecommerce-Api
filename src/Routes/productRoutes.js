@@ -19,12 +19,15 @@ const {
   updateCollection,
 } = require("../Controllers/products/CollectionController");
 
+
+
 router.get("/Collection", verifyJWT, getCollection);
 
 // Product Routes
-router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct);
+// router.post("/createProduct", verifyJWT,  createProduct);
 router.get("/", getAllProduct);
 router.get("/:productId", getOneProduct);
+router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct); 
 router.put("/updateProduct/:id", verifyJWT, restrictTo("admin"), updateProduct);
 router.delete(
   "/deleteProduct/:id",

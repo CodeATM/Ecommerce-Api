@@ -81,4 +81,10 @@ productSchema.virtual('reviews', {
   localField: '_id'
 });
 
+productSchema.pre('save', function(next) {
+  this.discountedPrice = this.price - this.discount / 100 * this.price
+  next();
+});
+
+
 module.exports = mongoose.model("Product", productSchema);

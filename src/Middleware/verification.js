@@ -3,7 +3,6 @@ const AsyncError = require("../utils/AsyncError");
 const Jwt = require("jsonwebtoken");
 const User = require("../Model/userModel");
 const { promisify } = require("util");
-const { type } = require("os");
 
 exports.verifyJWT = AsyncError(async (req, res, next) => {
   let token;
@@ -13,7 +12,7 @@ exports.verifyJWT = AsyncError(async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(" ")[1];
   } else if (req.cookies.jwt) {
-    token = req.cookies.jwt
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -23,7 +22,6 @@ exports.verifyJWT = AsyncError(async (req, res, next) => {
   const decoded = await promisify(Jwt.verify)(token, process.env.JWT_SECRET);
 
   const currentUser = await User.findById(decoded.id);
-  console.log(typeof decoded, decoded)
   if (!currentUser) {
     return next(
       new AppError(
@@ -32,9 +30,14 @@ exports.verifyJWT = AsyncError(async (req, res, next) => {
       )
     );
   }
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError("User recently changed password! Please log in again.", 401)
+    );
+  }
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  req.user = decoded.id;
+  req.user = currentUser;
   res.locals.user = currentUser;
 
   next();

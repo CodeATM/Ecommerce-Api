@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const collectionSchema = new mongoose.Schema(
   {
-    collectonName: {
+    collectionName: {
       type: String,
       required: [true, "Collection must have a name"],
       unique: [true, "collection name must be unique"],
@@ -33,8 +33,7 @@ const collectionSchema = new mongoose.Schema(
 collectionSchema.pre(/^find/, function (next) {
   this.populate({
     path: "product",
-    select: "name description images",
-  });
+    select: "name description images",  });
   next();
 });
 

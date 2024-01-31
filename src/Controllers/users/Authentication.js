@@ -84,7 +84,7 @@ const resetPassword = AsyncError(async (req, res, next) => {
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
+    paswordResetExpires: { $gt: Date.now() },
   });
 
   if (!user) {
@@ -93,11 +93,30 @@ const resetPassword = AsyncError(async (req, res, next) => {
 
   user.password = req.body.password;
   user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
+  user.paswordResetExpires = undefined;
   user.confirmPassword = req.body.confirmPassword;
   await user.save();
 
   createToken(user, 200, req, res);
 });
 
-module.exports = { registerUser, loginUser, forgetPassword, resetPassword };
+//Change user password when the user is logged in
+const changePassword = AsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select("+password");
+  console.log(req.user)
+
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    res.json({
+      sucess: false,
+      message: "Incorrect Password",
+    });
+  }
+
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+
+  createToken(user, 201, req, res);
+});
+
+module.exports = { registerUser, loginUser, forgetPassword, changePassword, resetPassword };

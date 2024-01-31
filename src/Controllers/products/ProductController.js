@@ -5,7 +5,7 @@ const Filtering = require("../../utils/Filtering");
 
 const createProduct = AsyncError(async (req, res, next) => {
   const product = await Product.create(req.body);
-  res.json({
+  return res.status(201).json({
     sucess: true,
     message: "Product created successfuly",
     product,
@@ -20,7 +20,7 @@ const getAllProduct = AsyncError(async (req, res, next) => {
     .paginate();
   const product = await features.query;
 
-  res.json({ sucess: true, message: "Here are your product", product });
+  res.json({ sucess: true, message: "Here are your products", product });
 });
 
 const getOneProduct = AsyncError(async (req, res, next) => {
@@ -56,6 +56,7 @@ const updateProduct = AsyncError(async (req, res, next) => {
   res.json({ sucess: true, message: "Product Updated", updatedProduct });
 });
 
+
 const deleteProduct = AsyncError(async (req, res, next) => {
   if (!req.user && !req.user.isAdmin == truee) {
     res.json({
@@ -68,6 +69,8 @@ const deleteProduct = AsyncError(async (req, res, next) => {
 
   res.json({ sucess: true, message: "Product deleted" });
 });
+
+
 module.exports = {
   createProduct,
   getAllProduct,

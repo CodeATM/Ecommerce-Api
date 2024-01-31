@@ -2,22 +2,20 @@ const express = require("express");
 const AppError = require("../../utils/ErrorHandler");
 const AsyncError = require("../../utils/AsyncError");
 const User = require("../../Model/userModel");
-const Jwt = require("jsonwebtoken");
 const { uploadToCloudinary } = require("../../utils/cloudinaryConfig");
 
-const jsontoken = (id) => {
-  return Jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach(el => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
   });
+
+  return newObj;
 };
 
 //Get user
 const getUser = AsyncError(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-  // .populate("Cart")
-  // .populate("Wishlist")
-  // .populate("Order");
-
   if (!user) {
     res.json({
       sucess: false,
@@ -29,44 +27,54 @@ const getUser = AsyncError(async (req, res, next) => {
 });
 
 //Change user details
+// const updateUserData = AsyncError(async (req, res, next) => {
+//   const updatedUser = await User.findByIdAndUpdate(
+//     req.user,
+//     { $set: req.body },
+//     { new: true }
+//   );
+//   if (!updatedUser) {
+//     res.json({
+//       sucess: false,
+//       message: "Unable to update user now.",
+//     });
+//   }
+//   res.json({
+//     sucess: true,
+//     message: "User updated",
+//     updatedUser,
+//   });
+// });
+
+
 const updateUserData = AsyncError(async (req, res, next) => {
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user,
-    { $set: req.body },
-    { new: true }
-  );
-  if (!updatedUser) {
-    res.json({
-      sucess: false,
-      message: "Unable to update user now.",
-    });
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError('This route is not for password updates. Please use /updateMyPassword.', 400)
+    );
   }
-  res.json({
-    sucess: true,
-    message: "User updated",
-    updatedUser,
+
+  const filteredBody = filterObj(req.body, 'firstname', 'lastname', 'email');
+  if (req.file) filteredBody.photo = req.file.filename;
+
+  // 3) Update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+
+  // sending responce to user
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser
+    }
   });
 });
 
-//Change user password when the user is logged in
-const changePassword = AsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select("+password");
 
-  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    res.json({
-      sucess: false,
-      message: "Incorrect Password",
-    });
-  }
 
-  user.password = req.body.password;
-  user.confirmPassword = req.body.confirmPassword;
-  await user.save();
-
-  const token = jsontoken(user._id);
-  res.json({ sucess: true, message: "Password updated", token });
-});
-
+// update user profile image
 const updateUserImage = AsyncError(async (req, res, next) => {
   // const user = req.user.id
   const user = await User.findById(req.user.id);
@@ -97,4 +105,14 @@ const updateUserImage = AsyncError(async (req, res, next) => {
   res.json({ sucess: true, message: "Iage uploaded", updatedUser });
 });
 
-module.exports = { getUser, updateUserData, changePassword, updateUserImage };
+const restrictAccount = AsyncError(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.user.id, { restricted: true });
+
+  res.status(204).json({
+    status: 'success',
+    user
+  });
+});
+
+module.exports = { getUser, updateUserData, updateUserImage, restrictAccount
+};
