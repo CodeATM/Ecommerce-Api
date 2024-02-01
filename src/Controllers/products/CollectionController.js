@@ -113,15 +113,15 @@ const updateCollection = AsyncError(async (req, res, next) => {
     });
   }
 
-  const updatedUser = await Collection.findByIdAndUpdate(
-    collectionID.id,
+  const updatedCollection = await Collection.findByIdAndUpdate(
+    collectionID,
     { $set: req.body },
     { new: true }
   );
   return res.status(200).json({
     sucess: true,
-    message: "Collection deleted",
-    updatedUser,
+    message: "Collection updated",
+   updatedCollection
   });
 });
 

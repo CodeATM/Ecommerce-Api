@@ -3,6 +3,11 @@ const AsyncError = require("../../utils/AsyncError");
 const AppError = require("../../utils/ErrorHandler");
 const Filtering = require("../../utils/Filtering");
 
+
+
+
+
+
 const createProduct = AsyncError(async (req, res, next) => {
   const product = await Product.create(req.body);
   return res.status(201).json({
@@ -30,7 +35,7 @@ const getOneProduct = AsyncError(async (req, res, next) => {
       message: "Product not found",
     });
   }
-  const product = await Product.findOne({_id : req.params.productId});
+  const product = await Product.findOne({ _id: req.params.productId });
   if (!product) {
     res.json({
       sucess: false,
@@ -56,7 +61,6 @@ const updateProduct = AsyncError(async (req, res, next) => {
   res.json({ sucess: true, message: "Product Updated", updatedProduct });
 });
 
-
 const deleteProduct = AsyncError(async (req, res, next) => {
   if (!req.user && !req.user.isAdmin == truee) {
     res.json({
@@ -70,6 +74,21 @@ const deleteProduct = AsyncError(async (req, res, next) => {
   res.json({ sucess: true, message: "Product deleted" });
 });
 
+// const getPriceRange = AsyncError(async (req, res, next) => {
+//   const { maxPrice, minPrice } = req.param;
+//   console.log(req.params)
+//   const Price = await Product.aggregate([
+//     {
+//       $match: {
+//         price: {
+//           $gte: minPrice,
+//           $lte: maxPrice,
+//         },
+//       },
+//     },
+//   ]);
+//   res.json({ sucess: true, message: "Price Range", Price });
+// });
 
 module.exports = {
   createProduct,
