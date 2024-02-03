@@ -8,6 +8,8 @@ const {
   updateProduct,
   getOneProduct,
   deleteProduct,
+  uploadProductImages,
+  resizeproductImages
 } = require("../Controllers/products/ProductController");
 
 const {
@@ -28,7 +30,7 @@ router.get("/Collection", verifyJWT, getCollection);
 router.get("/", getAllProduct);
 router.get("/:productId", getOneProduct);
 router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct);
-router.put("/updateProduct/:id", verifyJWT, restrictTo("admin"), updateProduct);
+router.patch("/updateProduct/:id", verifyJWT, restrictTo("admin"), uploadProductImages, resizeproductImages, updateProduct);
 router.delete(
   "/deleteProduct/:id",
   verifyJWT,

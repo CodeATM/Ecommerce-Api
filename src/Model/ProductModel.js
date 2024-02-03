@@ -40,7 +40,11 @@ const productSchema = new mongoose.Schema(
         },
       ],
     },
-    images: [Array],
+    imageCover: {
+      type: String,
+      required: [true, 'A tour must have a cover image']
+    },
+    images: [String],
     inStock: {
       type: Boolean,
       default: true

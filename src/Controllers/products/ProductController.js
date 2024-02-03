@@ -2,6 +2,55 @@ const Product = require("../../Model/ProductModel");
 const AsyncError = require("../../utils/AsyncError");
 const AppError = require("../../utils/ErrorHandler");
 const Filtering = require("../../utils/Filtering");
+const multer = require('multer')
+const sharp = require('sharp')
+const { uploadProduuctImagesCloudinary } = require("../../utils/cloudinaryConfig");
+
+
+const multerStorage = multer.memoryStorage();
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+const uploadProductImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+const resizeproductImages = AsyncError(async (req, res, next) => {
+  // 1) Cover image
+  req.body.imageCover = await uploadProduuctImagesCloudinary(
+    await sharp(req.files.imageCover[0].buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toBuffer()
+  );
+
+  // 2) Images
+  req.body.images = await Promise.all(
+    req.files.images.map(async (file, i) => {
+      return uploadProduuctImagesCloudinary(
+        await sharp(file.buffer)
+          .resize(2000, 1333)
+          .toFormat('jpeg')
+          .jpeg({ quality: 90 })
+          .toBuffer()
+      );
+    })
+  );
+
+  next();
+});
 
 
 
@@ -96,4 +145,6 @@ module.exports = {
   updateProduct,
   getOneProduct,
   deleteProduct,
+  uploadProductImages,
+  resizeproductImages
 };

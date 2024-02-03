@@ -9,18 +9,34 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadToCloudinary = async (imagePath) => {
-  try {
-
-    const result = await cloudinary.uploader.upload(imagePath)
-
-    // Return the Cloudinary result
-    return result.secure_url;
-  } catch (error) {
-    // Handle errors and return an error object
-    console.log(error)
-    return new AppError("Error uploading image to Cloudinary", 500);
-  }
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "users" },
+      (error, result) => {
+        if (error) {
+          reject(new AppError("Error uploading image to Cloudinary", 500));
+        } else {
+          resolve(result.secure_url);
+        }
+      }
+    ).end(buffer);
+  });
 };
 
-module.exports = { uploadToCloudinary };
+const uploadProduuctImagesCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "Product" },
+      (error, result) => {
+        if (error) {
+          reject(new AppError("Error uploading image to Cloudinary", 500));
+        } else {
+          resolve(result.secure_url);
+        }
+      }
+    ).end(buffer);
+  });
+};
+
+module.exports = { uploadToCloudinary, uploadProduuctImagesCloudinary };

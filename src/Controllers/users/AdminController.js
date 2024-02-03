@@ -16,4 +16,15 @@ const getAllUser = AsyncError(async (req, res, next) => {
   res.json({ sucess: true, message: "Here are all the users", allUsers });
 });
 
+
+//--------------------------Notes---------------------------------
+
+
+//build a satistic controller 
+//for orders generation for getting user most ordered most rated most viewed
+//best sellers and all sorts
+//
+
+//
+
 module.exports = { getAllUser };

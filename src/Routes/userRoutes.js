@@ -13,9 +13,12 @@ const {
   getUser,
   updateUserData,
   updateUserImage,
-  restrictAccount
+  restrictAccount,
+  uploadUserPhoto,
+  resizeUserPhoto
 } = require("../Controllers/users/userController");
 // const { updateProfilePhoto } = require('../Controllers/userControllers');
+
 
 // Authentication Routes
 router.post("/register", registerUser);
@@ -24,7 +27,7 @@ router.post("/forgetPassword", forgetPassword);
 router.post("/resetPassword/:token", resetPassword);
 
 router.get("/me", verifyJWT, getUser);
-router.put("/editProfile", verifyJWT, updateUserData);
+router.patch("/editProfile", verifyJWT, uploadUserPhoto, resizeUserPhoto,  updateUserData);
 router.put("/changePassword", verifyJWT, changePassword);
 router.put("/block", verifyJWT, restrictTo('admin'), restrictAccount);
 router.put("/addProfileImage", verifyJWT, updateUserImage);
