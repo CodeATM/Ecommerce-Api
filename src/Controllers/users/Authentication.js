@@ -4,6 +4,7 @@ const AsyncError = require("../../utils/AsyncError");
 const User = require("../../Model/userModel");
 const Jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+import Email from './../utils/email.js';
 
 const jsontoken = (id) => {
   return Jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -38,6 +39,9 @@ const registerUser = AsyncError(async (req, res, next) => {
   const user = await User.create(req.body);
 
   createToken(user, 201, req, res);
+  //change the url as soon ass you can it just a dummy
+  const url = 'www.awelewa.com/shop'
+  await new Email(user, url).sendWelcome();
 });
 
 //Login user
@@ -68,11 +72,24 @@ const forgetPassword = AsyncError(async (req, res, next) => {
 
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
-  res.json({
-    success: "success",
-    message: "Password reset token sent successfully",
-    resetToken,
-  });
+
+  //Send it to user's email
+  try {
+      //change the url as soon ass you can it just a dummy
+    const resetURL = `www.awelewa.io/test/api/v1/users/resetPassword/${resetToken}`;
+    await new Email(user, resetURL).sendPasswordReset();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!'
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.paswordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(new AppError('There was an error sending the email. Try again later!'), 500);
+  }
 });
 
 //verify the sent token

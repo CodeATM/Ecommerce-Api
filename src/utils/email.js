@@ -1,19 +1,15 @@
-import nodemailer from 'nodemailer';
-import pug from 'pug';
-import HtmlToText from 'html-to-text';
+const nodemailer = require('nodemailer');
+const pug = require('pug');
+const htmlToText = require('html-to-text');
 
-const { htmlToText } = HtmlToText;
-
-// For create email obj to send actual emails.
-export default class Email {
+module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
     this.firstName = user.firstname;
     this.url = url;
-    this.from = `Timileyin Awe <${process.env.EMAIL_FROM}>`;
+    this.from = `Oluwatimileyin Awe <${process.env.EMAIL_FROM}>`;
   }
 
-  // Create different transports for different environments
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       // Sendgrid
@@ -39,7 +35,7 @@ export default class Email {
   // Send the actual email
   async send(template, subject) {
     // 1) Render HTML based on a pug template
-    const html = pug.renderFile(`${__dirname}/../email/${template}.pug`, {
+    const html = pug.renderFile(`${__dirname}/../emails/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
       subject
@@ -59,10 +55,13 @@ export default class Email {
   }
 
   async sendWelcome() {
-    await this.send('welcome', 'Welcome to the Natours Family!');
+    await this.send('welcome', 'Welcome to Awelewa!');
   }
 
   async sendPasswordReset() {
-    await this.send('passwordReset', 'Here is your password reset token (valid for only 10 minutes)');
+    await this.send(
+      'passwordReset',
+      'Your password reset token (valid for only 10 minutes)'
+    );
   }
-}
+};
