@@ -15,6 +15,7 @@ const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 const AppError = require("./src/utils/ErrorHandler");
 const globalErrorHandler = require("./src/Controllers/ErrorController");
+const passport = require('./src/Controllers/users/passport')
 
 // app.enable("trust proxy");
 
@@ -42,15 +43,6 @@ app.use(
   })
 );
 
-// const storage = multer.diskStorage({
-//   destination: path.join(__dirname, "public/uploads"), // Fix the typo in "pubic" to "public"
-//   filename: (req, file, cb) => {
-//     cb(null, new Date().getTime() + path.extname(file.originalname));
-//   },
-// });
-
-// app.use(multer({ storage }).single("image"));
-
 mongoose
   .connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
@@ -63,6 +55,8 @@ app.use(compression());
 app.get("/", (req, res, next) => {
   res.json({ message: "Hello, welcome to Awelewa's Api" });
 });
+
+app.use(passport.initialize()) 
 
 app.use("/user", require("./src/Routes/userRoutes"));
 app.use("/product", require("./src/Routes/productRoutes"));

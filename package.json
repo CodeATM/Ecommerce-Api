@@ -25,8 +25,11 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.3",
     "nodemon": "^3.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pug": "^3.0.2",
     "sharp": "^0.33.2",
+    "stripe": "^14.18.0",
     "validator": "^13.9.0",
     "xss-clean": "^0.1.4"
   }

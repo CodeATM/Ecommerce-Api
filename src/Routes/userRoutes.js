@@ -12,24 +12,31 @@ const {
 const {
   getUser,
   updateUserData,
-  updateUserImage,
+  updateUserImage, 
   restrictAccount,
   uploadUserPhoto,
-  resizeUserPhoto
+  resizeUserPhoto,
 } = require("../Controllers/users/userController");
-// const { updateProfilePhoto } = require('../Controllers/userControllers');
-
+const passport = require("../Controllers/users/passport");
 
 // Authentication Routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/forgetPassword", forgetPassword);
 router.post("/resetPassword/:token", resetPassword);
+router.get('/google', passport.authenticate('google', {scope: ['profile', 'email']}))
+router.get('/google/callback', passport.authenticate('google', {failureRedirect: '/'}))  
 
 router.get("/me", verifyJWT, getUser);
-router.patch("/editProfile", verifyJWT, uploadUserPhoto, resizeUserPhoto,  updateUserData);
+router.patch(
+  "/editProfile",
+  verifyJWT,
+  uploadUserPhoto,
+  resizeUserPhoto,
+  updateUserData
+);
 router.put("/changePassword", verifyJWT, changePassword);
-router.put("/block", verifyJWT, restrictTo('admin'), restrictAccount);
+router.put("/block", verifyJWT, restrictTo("admin"), restrictAccount);
 router.put("/addProfileImage", verifyJWT, updateUserImage);
 
 module.exports = router;

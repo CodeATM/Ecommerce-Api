@@ -4,7 +4,7 @@ const AsyncError = require("../../utils/AsyncError");
 const User = require("../../Model/userModel");
 const Jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-import Email from './../utils/email.js';
+// import Email from './../utils/email.js';
 
 const jsontoken = (id) => {
   return Jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -40,8 +40,8 @@ const registerUser = AsyncError(async (req, res, next) => {
 
   createToken(user, 201, req, res);
   //change the url as soon ass you can it just a dummy
-  const url = 'www.awelewa.com/shop'
-  await new Email(user, url).sendWelcome();
+  // const url = 'www.awelewa.com/shop'
+  // await new Email(user, url).sendWelcome();
 });
 
 //Login user
@@ -76,8 +76,8 @@ const forgetPassword = AsyncError(async (req, res, next) => {
   //Send it to user's email
   try {
       //change the url as soon ass you can it just a dummy
-    const resetURL = `www.awelewa.io/test/api/v1/users/resetPassword/${resetToken}`;
-    await new Email(user, resetURL).sendPasswordReset();
+    // const resetURL = `www.awelewa.io/test/api/v1/users/resetPassword/${resetToken}`;
+    // await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
       status: 'success',
