@@ -24,8 +24,38 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/forgetPassword", forgetPassword);
 router.post("/resetPassword/:token", resetPassword);
-router.get('/google', passport.authenticate('google', {scope: ['profile', 'email']}))
-router.get('/google/callback', passport.authenticate('google', {failureRedirect: '/'}))  
+router.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  })
+);
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+    session: false,
+  }),
+  (req, res) => {
+    // Successful authentication, issue JWT and set cookie
+    const { token, user } = req.user;
+
+    // Set JWT as HTTP-only cookie
+    res.cookie("jwt", token, {
+      expires: new Date(
+        Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      ),
+      httpOnly: true, // Prevents client-side JS from accessing the cookie
+      secure: req.secure || req.headers["x-forwarded-proto"] === "https", // Ensures the cookie is sent over HTTPS
+    });
+
+    user.password = undefined; // Remove password from user object
+
+    // Redirect to frontend with token
+    res.redirect(`http://localhost:5000`);
+  }
+); 
 
 router.get("/me", verifyJWT, getUser);
 router.patch(

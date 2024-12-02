@@ -34,9 +34,12 @@ const createToken = (user, statusCode, req, res) => {
   });
 };
 
+//Check if emailExist
+
 //Register user
 const registerUser = AsyncError(async (req, res, next) => {
   const user = await User.create(req.body);
+  console.log(req.body)
 
   createToken(user, 201, req, res);
   //change the url as soon ass you can it just a dummy

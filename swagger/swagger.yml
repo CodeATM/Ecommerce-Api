@@ -1,0 +1,1252 @@
+openapi: 3.0.0
+info:
+  title: Awelewa API Documentation
+  description: |
+    Complete API documentation for Awelewa project.
+    This API provides endpoints for managing users, authentication, and other core functionalities.
+  version: 1.0.0
+  contact:
+    email: your-email@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.awelewa.com
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin]
+        restricted:
+          type: boolean
+        userImage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          maxLength: 500
+        price:
+          type: number
+        colors:
+          type: array
+          items:
+            type: string
+        sizes:
+          type: array
+          items:
+            type: string
+            enum: [small, Medium, Large, XL, XXL]
+        categories:
+          type: array
+          items:
+            type: string
+            enum: [kids, Adult, Male, Female]
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        inStock:
+          type: boolean
+          default: true
+        discount:
+          type: number
+        discountedPrice:
+          type: number
+        ratingsAverage:
+          type: number
+          minimum: 1
+          maximum: 5
+          default: 4.5
+        ratingsQuantity:
+          type: number
+          default: 0
+
+    Collection:
+      type: object
+      properties:
+        _id:
+          type: string
+        collectionName:
+          type: string
+          description: Unique name for the collection
+        product:
+          type: array
+          items:
+            type: string
+            description: Array of Product IDs
+        collectionDescription:
+          type: string
+          maxLength: 250
+        inStock:
+          type: boolean
+          default: true
+        collectionBanner:
+          type: string
+
+    Review:
+      type: object
+      properties:
+        _id:
+          type: string
+        product:
+          type: string
+          description: ID of the reviewed product
+        user:
+          type: string
+          description: ID of the user who wrote the review
+        review:
+          type: string
+          description: Review text
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          description: Rating given to the product
+
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          description: ID of the product in cart
+        quantity:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+
+    Cart:
+      type: object
+      properties:
+        _id:
+          type: string
+        user:
+          type: string
+          description: ID of the cart owner
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                  required: true
+                lastname:
+                  type: string
+                  required: true
+                email:
+                  type: string
+                  format: email
+                  required: true
+                password:
+                  type: string
+                  required: true
+                confirmPassword:
+                  type: string
+                  required: true
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  required: true
+                password:
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /auth/forgetPassword:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  required: true
+      responses:
+        "200":
+          description: Reset token sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /auth/resetPassword/{token}:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password using token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Password reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  required: true
+                confirmPassword:
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /auth/google:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Google OAuth2 login
+      responses:
+        "302":
+          description: Redirect to Google login
+
+  /auth/google/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Google OAuth2 callback handler
+      responses:
+        "302":
+          description: Redirect to frontend with authentication token
+
+  /user/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /user/editProfile:
+    patch:
+      tags:
+        - Users
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                photo:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: "#/components/schemas/User"
+
+  /user/changePassword:
+    put:
+      tags:
+        - Users
+      summary: Change password when logged in
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                passwordCurrent:
+                  type: string
+                  required: true
+                password:
+                  type: string
+                  required: true
+                confirmPassword:
+                  type: string
+                  required: true
+      responses:
+        "201":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /user/block:
+    put:
+      tags:
+        - Users
+      summary: Restrict a user account
+      description: Admin only endpoint
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Account restricted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /user/addProfileImage:
+    put:
+      tags:
+        - Users
+      summary: Update user profile image
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Profile image updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedUser:
+                    $ref: "#/components/schemas/User"
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of items per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Sort criteria (e.g., "price,-ratingsAverage")
+        - in: query
+          name: fields
+          schema:
+            type: string
+          description: Fields to include in response
+      responses:
+        "200":
+          description: List of products retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  product:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Get a single product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+          description: Product ID
+      responses:
+        "200":
+          description: Product retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  product:
+                    $ref: "#/components/schemas/Product"
+
+  /products/createProduct:
+    post:
+      tags:
+        - Products
+      summary: Create a new product (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  required: true
+                description:
+                  type: string
+                  required: true
+                price:
+                  type: number
+                  required: true
+                colors:
+                  type: array
+                  items:
+                    type: string
+                sizes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [small, Medium, Large, XL, XXL]
+                categories:
+                  type: array
+                  items:
+                    type: string
+                    enum: [kids, Adult, Male, Female]
+                imageCover:
+                  type: string
+                  format: binary
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                inStock:
+                  type: boolean
+                discount:
+                  type: number
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  product:
+                    $ref: "#/components/schemas/Product"
+
+  /products/updateProduct/{id}:
+    patch:
+      tags:
+        - Products
+      summary: Update a product (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Product ID
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                colors:
+                  type: array
+                  items:
+                    type: string
+                sizes:
+                  type: array
+                  items:
+                    type: string
+                categories:
+                  type: array
+                  items:
+                    type: string
+                imageCover:
+                  type: string
+                  format: binary
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                inStock:
+                  type: boolean
+                discount:
+                  type: number
+      responses:
+        "200":
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedProduct:
+                    $ref: "#/components/schemas/Product"
+
+  /products/deleteProduct/{id}:
+    delete:
+      tags:
+        - Products
+      summary: Delete a product (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Product ID
+      responses:
+        "200":
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /products/Collection:
+    get:
+      tags:
+        - Collections
+      summary: Get all collections
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Collections retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  collection:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Collection"
+
+  /products/createCollection:
+    post:
+      tags:
+        - Collections
+      summary: Create a new collection (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                collectionName:
+                  type: string
+                  required: true
+                collectionDescription:
+                  type: string
+                  required: true
+                  maxLength: 250
+                inStock:
+                  type: boolean
+                collectionBanner:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Collection created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  collection:
+                    $ref: "#/components/schemas/Collection"
+
+  /products/addProductToCollection/{productID}:
+    post:
+      tags:
+        - Collections
+      summary: Add product to collection (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: productID
+          required: true
+          schema:
+            type: string
+          description: Product ID to add to collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collectionID:
+                  type: string
+                  required: true
+                  description: ID of the collection to add product to
+      responses:
+        "200":
+          description: Product added to collection successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedCollection:
+                    $ref: "#/components/schemas/Collection"
+        "404":
+          description: Product or Collection not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /products/removeProductToCollection/{productID}:
+    post:
+      tags:
+        - Collections
+      summary: Remove product from collection (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: productID
+          required: true
+          schema:
+            type: string
+          description: Product ID to remove from collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collectionID:
+                  type: string
+                  required: true
+                  description: ID of the collection to remove product from
+      responses:
+        "200":
+          description: Product removed from collection successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedCollection:
+                    $ref: "#/components/schemas/Collection"
+        "404":
+          description: Product or Collection not found
+
+  /products/updateCollection/{collectionID}:
+    put:
+      tags:
+        - Collections
+      summary: Update a collection (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: collectionID
+          required: true
+          schema:
+            type: string
+          description: Collection ID to update
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                collectionName:
+                  type: string
+                collectionDescription:
+                  type: string
+                  maxLength: 250
+                inStock:
+                  type: boolean
+                collectionBanner:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Collection updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedCollection:
+                    $ref: "#/components/schemas/Collection"
+        "404":
+          description: Collection not found
+
+  /products/deleteCollection/{collectionID}:
+    delete:
+      tags:
+        - Collections
+      summary: Delete a collection (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: collectionID
+          required: true
+          schema:
+            type: string
+          description: Collection ID to delete
+      responses:
+        "200":
+          description: Collection deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: Collection not found
+
+  /reviews/createReview/{productId}:
+    post:
+      tags:
+        - Reviews
+      summary: Create a new review for a product
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+          description: ID of the product to review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review:
+                  type: string
+                  required: true
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+                  required: true
+      responses:
+        "200":
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  newReview:
+                    $ref: "#/components/schemas/Review"
+        "404":
+          description: Product not found
+
+  /reviews/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Get all reviews for a product
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Product ID to get reviews for
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  productReviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+        "404":
+          description: Product not found
+
+  /reviews/updateReview/{id}:
+    post:
+      tags:
+        - Reviews
+      summary: Update a review
+      description: Can only be done by the review author or admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Review ID to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review:
+                  type: string
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+      responses:
+        "200":
+          description: Review updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updateReview:
+                    $ref: "#/components/schemas/Review"
+        "404":
+          description: Review not found
+        "401":
+          description: Unauthorized - Not the review author
+
+  /reviews/deleteReview/{id}:
+    delete:
+      tags:
+        - Reviews
+      summary: Delete a review
+      description: Can only be done by the review author
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Review ID to delete
+      responses:
+        "200":
+          description: Review deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: Review not found
+        "401":
+          description: Unauthorized - Not the review author
+
+  /cart/addItem:
+    post:
+      tags:
+        - Cart
+      summary: Add item to cart
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: Item added to cart successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  updatedCart:
+                    $ref: "#/components/schemas/Cart"
+        "404":
+          description: Product not found
+
+  /cart/removeItem:
+    post:
+      tags:
+        - Cart
+      summary: Remove item from cart
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: Item removed from cart successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  updatedCart:
+                    $ref: "#/components/schemas/Cart"
+        "404":
+          description: Cart not found or item not in cart
+
+  /cart/decreaseQuanity:
+    post:
+      tags:
+        - Cart
+      summary: Decrease item quantity in cart
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: Item quantity decreased successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  cart:
+                    $ref: "#/components/schemas/Cart"
+        "400":
+          description: Item does not exist in cart
+
+  /cart/cart:
+    get:
+      tags:
+        - Cart
+      summary: Get user's cart
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Cart retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  cart:
+                    $ref: "#/components/schemas/Cart"
+        "404":
+          description: Cart not found
+
+  /cart/Allcart:
+    get:
+      tags:
+        - Cart
+      summary: Get all carts (Admin)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All carts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  cart:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Cart"
+        "404":
+          description: No carts found

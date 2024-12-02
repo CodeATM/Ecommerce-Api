@@ -1,13 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../../Model/userModel");
-const Jwt = require('jsonwebtoken')
 
-const jsontoken = (id) => {
-  return Jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
 
 passport.use(
   new GoogleStrategy(
@@ -18,14 +12,11 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       console.log({ profile });
-      const user = await User.findOne({email: profile.emails[0].value})
+      const user = await User.findOne({ email: profile.emails[0].value });
 
       if (!user) {
-        const newUser = await User.create({
-            
-        })
+        console.log('user not found')
       }
-
       return null, profile;
     }
   )

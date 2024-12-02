@@ -15,9 +15,10 @@ const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 const AppError = require("./src/utils/ErrorHandler");
 const globalErrorHandler = require("./src/Controllers/ErrorController");
-const passport = require('./src/Controllers/users/passport')
-
-// app.enable("trust proxy");
+const passport = require("./src/Controllers/users/passport");
+const SwaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const swaggerDocument = YAML.load("./swagger/swagger.yml");
 
 app.use(helmet());
 
@@ -29,7 +30,13 @@ const limiter = rateLimit({
 
 app.use("/", limiter);
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    credentials: true,
+  })
+);
+app.use("/docs", SwaggerUi.serve, SwaggerUi.setup(swaggerDocument));
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
@@ -56,7 +63,7 @@ app.get("/", (req, res, next) => {
   res.json({ message: "Hello, welcome to Awelewa's Api" });
 });
 
-app.use(passport.initialize()) 
+app.use(passport.initialize());
 
 app.use("/user", require("./src/Routes/userRoutes"));
 app.use("/product", require("./src/Routes/productRoutes"));

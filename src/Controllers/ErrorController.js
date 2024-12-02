@@ -6,9 +6,22 @@ const handleCastErrorDB = err => {
 };
 
 const handleDuplicateFieldsDB = err => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  console.log(value);
+  const fieldName = Object.keys(err.keyValue)[0];
 
+  // Check if the error is due to a duplicate key error
+  if (err.code === 11000 && err.keyValue[fieldName]) {
+    // Extract the value causing the duplication
+    const value = err.keyValue[fieldName];
+
+    // Generate a custom error message indicating the duplicate field value
+    const message = `The ${fieldName} is already in use.`;
+
+    // Return the custom error message wrapped in an AppError instance
+    return new AppError(message, 400);
+  }
+
+  // If it's not a duplicate field error, handle it as before
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
   const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };
@@ -67,6 +80,7 @@ const sendErrorProd = (err, req, res) => {
 
   // B) RENDERED WEBSITE
   // A) Operational, trusted error: send message to client
+  console.log(err.isOperational)
   if (err.isOperational) {
     console.log(err);
     return res.status(err.statusCode).render('error', {
