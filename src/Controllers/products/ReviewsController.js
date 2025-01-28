@@ -3,101 +3,102 @@ const AppError = require("../../utils/ErrorHandler");
 const AsyncError = require("../../utils/AsyncError");
 const Product = require("../../Model/ProductModel");
 const User = require("../../Model/userModel");
+const { NotFoundError, UnauthorizedError } = require("../ErrorController");
+const { successResponse } = require("../../utils/responseHandler");
 
-const createReview = AsyncError(async (req, res, next) => {
-  const { productId } = req.params;
-  const { review, rating } = req.body;
-  console.log(typeof req.user.id)
+const createReview = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const { review, rating } = req.body;
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new NotFoundError("Product with this Id not found.");
+    }
 
-  const product = await Product.findById(productId);
-  if (!product) {
-    res.json({
-      sucess: false,
-      messaage: "Product not found",
+    const newReview = await Review.create({
+      review,
+      rating,
+      user: req.user.id,
+      product: product.id,
     });
+    await successResponse(res, 201, "Reviews created successfully", newReview);
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-  console.log(req.user.id)
+};
 
-  const newReview = await Review.create({
-    review,
-    rating,
-    user: req.user.id,
-    product: product.id,
-  });
-  res.json({
-    sucess: true,
-    messaage: "Reviews created successfully",
-    newReview,
-  });
-});
+const getProductReviews = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-const getProductReviews = AsyncError(async (req, res, next) => {
-  const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      throw new NotFoundError("Product with this Id not found.");
+    }
 
-  const product = await Product.findById(id);
-  if (!product) {
-    res.status(404).json({
-      sucess: false,
-      messaage: "Product not found",
-    });
+    const productReviews = await Review.find({ product: product.id });
+    await successResponse(
+      res,
+      200,
+      "Reviews created successfully",
+      productReviews
+    );
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
+};
 
-  const productReviews = await Review.find({ product: product.id })
-  res.status(200).json({
-    sucess: true,
-    messaage: "Here are the product reviews",
-    productReviews,
-  });
-});
+const editProductReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+    if (!review) {
+      throw new NotFoundError("Review with this Id not found.");
+    } else if (req.user !== review.user) {
+      throw new UnauthorizedError("You cannot edit this review.");
+    }
 
-const editProductReview = AsyncError(async (req, res, next) => {
-  const { id } = req.params;
-  const review = await Review.findById({_id: id})
-  if (!review) {
-    return res.status(404).json({
-      sucess: false,
-      message: "Invalid Review ID",
-    });
-  } else if (req.user !== review.user) {
-    return res.status(401).json({
-      sucess: false,
-      message: "You cannot do this",
-    });
+    const updateReview = await Review.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    await successResponse(
+      res,
+      200,
+      "Reviews updated successfully",
+      updateReview
+    );
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
+};
 
-  const updateReview = await Review.findByIdAndUpdate(
-    id,
-    { $set: req.body },
-    { new: true, 
-    runValidators: true }
-  );
-  res.json({
-    sucess: true,
-    messaage: "Here are the product reviews", 
-    updateReview,
-  });
-});
+const deleteProductReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+    if (!review) {
+      throw new NotFoundError("Review with this Id not found.");
+    } else if (req.user !== review.user) {
+      throw new UnauthorizedError("You cannot edit this review.");
+    }
 
-const deleteProductReview = AsyncError(async (req, res, next) => {
-  const { id } = req.params;
-  const review = await Review.findById({_id: id})
-  if (!review) {
-    return res.status(404).json({
-      sucess: false,
-      message: "Invalid Review ID",
-    });
-  } else if (req.user !== review.user) {
-    return res.status(401).json({
-      sucess: false,
-      message: "You cannot do this",
-    });
+    await Review.findByIdAndDelete(id);
+    await successResponse(res, 200, "Reviews deleted successfully");
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-  
-    const deleteReview = await Review.findByIdAndDelete(id);
-    res.status(200).json({
-      sucess: true,
-      messaage: "Review Deleted",
-    });
-  });
+};
 
-module.exports = {getProductReviews, createReview, editProductReview, getProductReviews, deleteProductReview}
+module.exports = {
+  getProductReviews,
+  createReview,
+  editProductReview,
+  getProductReviews,
+  deleteProductReview,
+};

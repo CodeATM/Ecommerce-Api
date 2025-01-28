@@ -30,7 +30,7 @@ router.post("/createProduct", verifyJWT,  createProduct);
 router.get("/", getAllProduct);
 router.get("/:productId", getOneProduct);
 router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct);
-router.patch("/updateProduct/:id", verifyJWT, restrictTo("admin"), uploadProductImages, resizeproductImages, updateProduct);
+router.patch("/updateProduct/:id", verifyJWT, restrictTo("admin"), updateProduct);
 router.delete(
   "/deleteProduct/:id",
   verifyJWT,

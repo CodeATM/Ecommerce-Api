@@ -11,7 +11,7 @@ info:
 servers:
   - url: http://localhost:8000
     description: Local development server
-  - url: https://api.awelewa.com
+  - url: https://ecommerce-api-oe5e.onrender.com
     description: Production server
 
 components:
