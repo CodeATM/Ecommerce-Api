@@ -1,6 +1,6 @@
 const Product = require("../../Model/ProductModel");
 const AsyncError = require("../../utils/AsyncError");
-const AppError = require("../../utils/ErrorHandler");
+const AppError = require("../../utils/responseHandler");
 const Filtering = require("../../utils/Filtering");
 const multer = require('multer')
 const sharp = require('sharp')

@@ -13,11 +13,12 @@ const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
-const AppError = require("./src/utils/ErrorHandler");
-const globalErrorHandler = require("./src/Controllers/ErrorController");
+
 const passport = require("./src/Controllers/users/passport");
 const SwaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
+const { errorResponse } = require("./src/utils/responseHandler");
+const { errorMiddleware } = require("./src/Controllers/ErrorController");
 const swaggerDocument = YAML.load("./swagger/swagger.yml");
 
 app.use(helmet());
@@ -66,15 +67,15 @@ app.get("/", (req, res, next) => {
 app.use(passport.initialize());
 
 app.use("/user", require("./src/Routes/userRoutes"));
-app.use("/product", require("./src/Routes/productRoutes"));
-app.use("/review", require("./src/Routes/reviewRoutes"));
-app.use("/order", require("./src/Routes/orderCartRoutes"));
+// app.use("/product", require("./src/Routes/productRoutes"));
+// app.use("/review", require("./src/Routes/reviewRoutes"));
+// app.use("/order", require("./src/Routes/orderCartRoutes"));
 
 app.all("*", (req, res, next) => {
-  next(new AppError(`can't find this route on the server!!!`, 404));
+  errorResponse(res, 404, "Not found");
 });
 
-app.use(globalErrorHandler);
+app.use(errorMiddleware.handle);
 
 app.listen(PORT, () => {
   console.log(`Backend is running on port ${PORT}`);

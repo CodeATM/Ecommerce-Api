@@ -1,5 +1,5 @@
 const express = require("express");
-const AppError = require("../../utils/ErrorHandler");
+const AppError = require("../../utils/responseHandler");
 const AsyncError = require("../../utils/AsyncError");
 const User = require("../../Model/userModel");
 const { uploadToCloudinary } = require("../../utils/cloudinaryConfig");

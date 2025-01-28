@@ -1,6 +1,6 @@
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const AppError = require("../utils/ErrorHandler");
+const AppError = require("./responseHandler");
 const AsyncError = require("../utils/AsyncError");
 
 cloudinary.config({

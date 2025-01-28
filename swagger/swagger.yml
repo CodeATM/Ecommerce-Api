@@ -169,7 +169,7 @@ components:
             $ref: "#/components/schemas/CartItem"
 
 paths:
-  /auth/register:
+  /user/register:
     post:
       tags:
         - Authentication
@@ -211,14 +211,8 @@ paths:
                     type: string
                   user:
                     $ref: "#/components/schemas/User"
-        "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 
-  /auth/login:
+  /user/login:
     post:
       tags:
         - Authentication
@@ -252,11 +246,11 @@ paths:
                   user:
                     $ref: "#/components/schemas/User"
 
-  /auth/forgetPassword:
+  /user/forgetPassword:
     post:
       tags:
         - Authentication
-      summary: Request password reset token
+      summary: Request password reset
       requestBody:
         required: true
         content:
@@ -267,7 +261,6 @@ paths:
                 email:
                   type: string
                   format: email
-                  required: true
       responses:
         "200":
           description: Reset token sent successfully
@@ -281,7 +274,7 @@ paths:
                   message:
                     type: string
 
-  /auth/resetPassword/{token}:
+  /user/resetPassword/{token}:
     post:
       tags:
         - Authentication
@@ -292,7 +285,6 @@ paths:
           required: true
           schema:
             type: string
-          description: Password reset token
       requestBody:
         required: true
         content:
@@ -321,7 +313,7 @@ paths:
                   user:
                     $ref: "#/components/schemas/User"
 
-  /auth/google:
+  /user/google:
     get:
       tags:
         - Authentication
@@ -330,7 +322,7 @@ paths:
         "302":
           description: Redirect to Google login
 
-  /auth/google/callback:
+  /user/google/callback:
     get:
       tags:
         - Authentication
