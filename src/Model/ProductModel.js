@@ -19,6 +19,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Product must have a price"],
     },
+    productId: {
+      type: String,
+      required: [true, "Product need a productId"],
+    },
     colors: {
       type: [String],
       required: true,
@@ -36,18 +40,18 @@ const productSchema = new mongoose.Schema(
       type: [
         {
           type: String,
-          enum: ["kids", "Adult", "Male", "Female"],
+          enum: ["kids", "adult", "male", "female"],
         },
       ],
     },
     imageCover: {
       type: String,
-      required: [true, 'A tour must have a cover image']
+      required: [true, "A Product must have a cover image"],
     },
     images: [String],
     inStock: {
       type: Boolean,
-      default: true
+      default: true,
     },
     discount: {
       type: Number,
@@ -60,13 +64,17 @@ const productSchema = new mongoose.Schema(
     ratingsAverage: {
       type: Number,
       default: 4.5,
-      min: [1, 'Rating must be above 1.0'],
-      max: [5, 'Rating must be below 5.0'],
-      set: val => Math.round(val * 10) / 10
+      min: [1, "Rating must be above 1.0"],
+      max: [5, "Rating must be below 5.0"],
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
-      default: 0
+      default: 0,
+    },
+    quantity: {
+      type: Number,
+      default: 0,
     },
   },
   {
@@ -79,16 +87,15 @@ productSchema.index({ price: 1, ratingsAverage: -1 });
 productSchema.index({ slug: 1 });
 
 // Virtual populate
-productSchema.virtual('reviews', {
-  ref: 'Review',
-  foreignField: 'product',
-  localField: '_id'
+productSchema.virtual("reviews", {
+  ref: "Review",
+  foreignField: "product",
+  localField: "_id",
 });
 
-productSchema.pre('save', function(next) {
-  this.discountedPrice = this.price - this.discount / 100 * this.price
+productSchema.pre("save", function (next) {
+  this.discountedPrice = this.price - (this.discount / 100) * this.price;
   next();
 });
-
 
 module.exports = mongoose.model("Product", productSchema);

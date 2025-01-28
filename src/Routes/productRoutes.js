@@ -12,21 +12,21 @@ const {
   resizeproductImages
 } = require("../Controllers/products/ProductController");
 
-const {
-  createCollection,
-  addProductToCollection,
-  removeProductToCollection,
-  getCollection,
-  deleteCollection,
-  updateCollection,
-} = require("../Controllers/products/CollectionController");
+// const {
+//   createCollection,
+//   addProductToCollection,
+//   removeProductToCollection,
+//   getCollection,
+//   deleteCollection,
+//   updateCollection,
+// } = require("../Controllers/products/CollectionController");
 
 
 
-router.get("/Collection", verifyJWT, getCollection);
+// router.get("/Collection", verifyJWT, getCollection);
 
 // Product Routes
-// router.post("/createProduct", verifyJWT,  createProduct);
+router.post("/createProduct", verifyJWT,  createProduct);
 router.get("/", getAllProduct);
 router.get("/:productId", getOneProduct);
 router.post("/createProduct", verifyJWT, restrictTo("admin"), createProduct);
@@ -39,35 +39,35 @@ router.delete(
 );
 
 //collection route
-router.post(
-  "/createCollection",
-  verifyJWT,
-  restrictTo("admin"),
-  createCollection
-);
-router.post(
-  "/addProductToCollection/:productID",
-  verifyJWT,
-  restrictTo("admin"),
-  addProductToCollection
-);
-router.post(
-  "/removeProductToCollection/:productID",
-  verifyJWT,
-  restrictTo("admin"),
-  removeProductToCollection
-);
-router.delete(
-  "/deleteCollection/:collectionID",
-  verifyJWT,
-  restrictTo("admin"),
-  deleteCollection
-);
-router.put(
-  "/updateCollection/:collectionID",
-  verifyJWT,
-  restrictTo("admin"),
-  updateCollection
-);
+// router.post(
+//   "/createCollection",
+//   verifyJWT,
+//   restrictTo("admin"),
+//   createCollection
+// );
+// router.post(
+//   "/addProductToCollection/:productID",
+//   verifyJWT,
+//   restrictTo("admin"),
+//   addProductToCollection
+// );
+// router.post(
+//   "/removeProductToCollection/:productID",
+//   verifyJWT,
+//   restrictTo("admin"),
+//   removeProductToCollection
+// );
+// router.delete(
+//   "/deleteCollection/:collectionID",
+//   verifyJWT,
+//   restrictTo("admin"),
+//   deleteCollection
+// );
+// router.put(
+//   "/updateCollection/:collectionID",
+//   verifyJWT,
+//   restrictTo("admin"),
+//   updateCollection
+// );
 
 module.exports = router;

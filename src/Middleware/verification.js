@@ -1,53 +1,35 @@
 const AppError = require("../utils/responseHandler");
-const AsyncError = require("../utils/AsyncError");
 const Jwt = require("jsonwebtoken");
 const User = require("../Model/userModel");
-const { promisify } = require("util");
 
-exports.verifyJWT = AsyncError(async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  } else if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
+const { UnauthorizedError } = require("../Controllers/ErrorController");
 
-  if (!token) {
-    return next(new AppError("You don't have access to this route", 401));
-  }
+exports.verifyJWT = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  const decoded = await promisify(Jwt.verify)(token, process.env.JWT_SECRET);
-
-  const currentUser = await User.findById(decoded.id);
-  if (!currentUser) {
+  // Check for the presence of the Authorization header
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next(
-      new AppError(
-        "The user belonging to this token does no longer exist.",
-        401
-      )
+      new UnauthorizedError("Missing or invalid Authorization header")
     );
   }
-  if (currentUser.changedPasswordAfter(decoded.iat)) {
-    return next(
-      new AppError("User recently changed password! Please log in again.", 401)
-    );
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const user = Jwt.verify(token, process.env.JWT_SECRET);
+    console.log(user);
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
   }
-
-  // GRANT ACCESS TO PROTECTED ROUTE
-  req.user = currentUser;
-  res.locals.user = currentUser;
-
-  next();
-});
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(
-        new AppError("You do not have permission to perform this action", 403)
+      throw new UnauthorizedError(
+        "You are not authorized to perform this action"
       );
     }
 

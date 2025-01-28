@@ -20,12 +20,10 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, "Input a password"],
     select: false
   },
   confirmPassword: {
     type: String,
-    required: [true, "Reenter a correct password"],
     validate: {
       validator: function (el) {
         return el === this.password;

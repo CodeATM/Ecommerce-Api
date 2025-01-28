@@ -1,13 +1,15 @@
 // routes.js
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+const { successResponse } = require("../utils/responseHandler")
 const { verifyJWT, restrictTo } = require("../Middleware/verification");
 const {
   registerUser,
   loginUser,
-  // forgetPassword,
-  // resetPassword,
-  // changePassword,
+  forgetPassword,
+  resetPassword,
+  changePassword,
 } = require("../Controllers/users/Authentication");
 // const {
 //   getUser,
@@ -22,41 +24,48 @@ const passport = require("../Controllers/users/passport");
 // Authentication Routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-// router.post("/forgetPassword", forgetPassword);
-// router.post("/resetPassword/:token", resetPassword);
-// router.get(
-//   "/google",
-//   passport.authenticate("google", {
-//     scope: ["profile", "email"],
-//     session: false,
-//   })
-// );
-// router.get(
-//   "/google/callback",
-//   passport.authenticate("google", {
-//     failureRedirect: "/login",
-//     session: false,
-//   }),
-//   (req, res) => {
-//     // Successful authentication, issue JWT and set cookie
-//     const { token, user } = req.user;
+router.post("/forgetPassword", forgetPassword);
+router.post("/resetPassword/:token", resetPassword);
+router.put("/changePassword", verifyJWT, changePassword);
+// Google OAuth login route
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  })
+);
 
-//     // Set JWT as HTTP-only cookie
-//     res.cookie("jwt", token, {
-//       expires: new Date(
-//         Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-//       ),
-//       httpOnly: true, // Prevents client-side JS from accessing the cookie
-//       secure: req.secure || req.headers["x-forwarded-proto"] === "https", // Ensures the cookie is sent over HTTPS
-//     });
+// Google OAuth callback route
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+    session: false,
+  }),
+  async (req, res) => {
+    try {
+      // Generate JWT
+      const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_COOKIE_EXPIRES_IN,
+      });
 
-//     user.password = undefined; // Remove password from user object
+      const data = {
+        userId: req.user._id,
+        accessToken: token,
+      };
 
-//     // Redirect to frontend with token
-//     res.redirect(`http://localhost:5000`);
-//   }
-// );
+      // Send success response
+      await successResponse(res, 201, "User authenticated successfully", data);
 
+      // Alternatively, redirect to the frontend with the token
+      // res.redirect(`http://localhost:3000?token=${token}`);
+    } catch (error) {
+      console.error("Error during authentication callback:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+);
 // router.get("/me", verifyJWT, getUser);
 // router.patch(
 //   "/editProfile",
@@ -65,7 +74,7 @@ router.post("/login", loginUser);
 //   resizeUserPhoto,
 //   updateUserData
 // );
-// router.put("/changePassword", verifyJWT, changePassword);
+const paswordSecFunc = () => {};
 // router.put("/block", verifyJWT, restrictTo("admin"), restrictAccount);
 // router.put("/addProfileImage", verifyJWT, updateUserImage);
 

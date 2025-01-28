@@ -3,7 +3,10 @@ const AsyncError = require("../../utils/AsyncError");
 const User = require("../../Model/userModel");
 const Jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { successResponse } = require("../../utils/responseHandler");
+const {
+  successResponse,
+  errorResponse,
+} = require("../../utils/responseHandler");
 const { BadRequestError, NotFoundError } = require("../ErrorController");
 
 const jsontoken = (id) => {
@@ -49,7 +52,7 @@ const registerUser = async (req, res, next) => {
 };
 
 //Login user
-const loginUser = AsyncError(async (req, res, next) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -74,85 +77,90 @@ const loginUser = AsyncError(async (req, res, next) => {
     console.log(error);
     next(error);
   }
-});
+};
 
 //forget Password
-const forgetPassword = AsyncError(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
-
-  if (!user) {
-    return next(
-      new AppError("There is no account registered with this email", 404)
-    );
-  }
-
-  const resetToken = user.createPasswordResetToken();
-  await user.save({ validateBeforeSave: false });
-
-  //Send it to user's email
+const forgetPassword = async (req, res, next) => {
   try {
-    //change the url as soon ass you can it just a dummy
-    // const resetURL = `www.awelewa.io/test/api/v1/users/resetPassword/${resetToken}`;
-    // await new Email(user, resetURL).sendPasswordReset();
+    const { email } = req.body;
+    if (!email) {
+      throw new BadRequestError("Input a valid Email.");
+    }
+    const user = await User.findOne({ email });
 
-    res.status(200).json({
-      status: "success",
-      message: "Token sent to email!",
-    });
-  } catch (err) {
-    user.passwordResetToken = undefined;
-    user.paswordResetExpires = undefined;
+    if (!user) {
+      throw new NotFoundError("User not found.");
+    }
+    const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    return next(
-      new AppError("There was an error sending the email. Try again later!"),
-      500
-    );
+    //Send it to user's email
+    try {
+      //change the url as soon ass you can it just a dummy
+      // const resetURL = `www.awelewa.io/test/api/v1/users/resetPassword/${resetToken}`;
+      // await new Email(user, resetURL).sendPasswordReset();
+
+      await successResponse(res, 200, "Token sent to yor Email", resetToken);
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.paswordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return errorResponse(res, 400, "Error sending Token to email");
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-});
+};
 
 //verify the sent token
 const resetPassword = AsyncError(async (req, res, next) => {
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
+  try {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
 
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    paswordResetExpires: { $gt: Date.now() },
-  });
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      paswordResetExpires: { $gt: Date.now() },
+    });
 
-  if (!user) {
-    return next(new AppError("Token Invalid or has expired"));
+    if (!user) {
+      throw new NotFoundError("user not found");
+    }
+
+    user.password = req.body.password;
+    user.passwordResetToken = undefined;
+    user.paswordResetExpires = undefined;
+    user.confirmPassword = req.body.confirmPassword;
+    await user.save();
+    await successResponse(res, 201, "user reset password successful");
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-
-  user.password = req.body.password;
-  user.passwordResetToken = undefined;
-  user.paswordResetExpires = undefined;
-  user.confirmPassword = req.body.confirmPassword;
-  await user.save();
-
-  createToken(user, 200, req, res);
 });
 
 //Change user password when the user is logged in
 const changePassword = AsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select("+password");
-  console.log(req.user);
+  try {
+    const user = await User.findById(req.user.id).select("+password");
+    if (
+      !(await user.correctPassword(req.body.currentPassword, user.password))
+    ) {
+      throw new BadRequestError("Password incorrect.");
+    }
 
-  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    res.json({
-      sucess: false,
-      message: "Incorrect Password",
-    });
+    user.password = req.body.password;
+    user.confirmPassword = req.body.confirmPassword;
+    await user.save();
+    await successResponse(res, 202, "Password Changed Successfully");
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-
-  user.password = req.body.password;
-  user.confirmPassword = req.body.confirmPassword;
-  await user.save();
-
-  createToken(user, 201, req, res);
 });
 
 module.exports = {

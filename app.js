@@ -67,7 +67,7 @@ app.get("/", (req, res, next) => {
 app.use(passport.initialize());
 
 app.use("/user", require("./src/Routes/userRoutes"));
-// app.use("/product", require("./src/Routes/productRoutes"));
+app.use("/product", require("./src/Routes/productRoutes"));
 // app.use("/review", require("./src/Routes/reviewRoutes"));
 // app.use("/order", require("./src/Routes/orderCartRoutes"));
 

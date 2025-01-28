@@ -2,17 +2,20 @@ const Product = require("../../Model/ProductModel");
 const AsyncError = require("../../utils/AsyncError");
 const AppError = require("../../utils/responseHandler");
 const Filtering = require("../../utils/Filtering");
-const multer = require('multer')
-const sharp = require('sharp')
-const { uploadProduuctImagesCloudinary } = require("../../utils/cloudinaryConfig");
-
+const multer = require("multer");
+const sharp = require("sharp");
+const {
+  uploadProduuctImagesCloudinary,
+} = require("../../utils/cloudinaryConfig");
+const { successResponse } = require("../../utils/responseHandler");
+const { BadRequestError, NotFoundError } = require("../ErrorController");
 
 const multerStorage = multer.memoryStorage();
 const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image')) {
+  if (file.mimetype.startsWith("image")) {
     cb(null, true);
   } else {
-    cb(new AppError('Not an image! Please upload only images.', 400), false);
+    cb(new AppError("Not an image! Please upload only images.", 400), false);
   }
 };
 
@@ -22,8 +25,8 @@ const upload = multer({
 });
 
 const uploadProductImages = upload.fields([
-  { name: 'imageCover', maxCount: 1 },
-  { name: 'images', maxCount: 3 },
+  { name: "imageCover", maxCount: 1 },
+  { name: "images", maxCount: 3 },
 ]);
 
 const resizeproductImages = AsyncError(async (req, res, next) => {
@@ -31,7 +34,7 @@ const resizeproductImages = AsyncError(async (req, res, next) => {
   req.body.imageCover = await uploadProduuctImagesCloudinary(
     await sharp(req.files.imageCover[0].buffer)
       .resize(2000, 1333)
-      .toFormat('jpeg')
+      .toFormat("jpeg")
       .jpeg({ quality: 90 })
       .toBuffer()
   );
@@ -42,7 +45,7 @@ const resizeproductImages = AsyncError(async (req, res, next) => {
       return uploadProduuctImagesCloudinary(
         await sharp(file.buffer)
           .resize(2000, 1333)
-          .toFormat('jpeg')
+          .toFormat("jpeg")
           .jpeg({ quality: 90 })
           .toBuffer()
       );
@@ -52,66 +55,102 @@ const resizeproductImages = AsyncError(async (req, res, next) => {
   next();
 });
 
+const generateUniqueProductId = async () => {
+  const generateRandomId = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let productId = "";
+    for (let i = 0; i < 7; i++) {
+      const randomIndex = Math.floor(Math.random() * chars.length);
+      productId += chars[randomIndex];
+    }
+    return productId;
+  };
 
+  let productId = generateRandomId();
+  const existingProduct = await Product.findOne({ productId });
 
-
-
+  if (existingProduct) {
+    return generateUniqueProductId();
+  }
+  return productId;
+};
 
 const createProduct = AsyncError(async (req, res, next) => {
-  const product = await Product.create(req.body);
-  return res.status(201).json({
-    sucess: true,
-    message: "Product created successfuly",
-    product,
-  });
+  try {
+    const productId = await generateUniqueProductId();
+    const product = await Product.create({ ...req.body, productId });
+    await successResponse(res, 201, "product created", product);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 const getAllProduct = AsyncError(async (req, res, next) => {
-  const features = new Filtering(Product.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-  const product = await features.query;
+  try {
+    const features = new Filtering(Product.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-  res.json({ sucess: true, message: "Here are your products", product });
+    const products = await features.query.select(
+      "name price imageCover ratingsAverage"
+    );
+
+    await successResponse(res, 200, "Product fetched", products);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 const getOneProduct = AsyncError(async (req, res, next) => {
-  if (!req.params.productId) {
-    res.json({
-      sucess: false,
-      message: "Product not found",
-    });
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      throw new BadRequestError("Input the product id ");
+    }
+    const product = await Product.findOne({ productId });
+    if (!product) {
+      throw new NotFoundError("Product not found");
+    }
+    await successResponse(res, 200, "Product fetched", product);
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-  const product = await Product.findOne({ _id: req.params.productId });
-  if (!product) {
-    res.json({
-      sucess: false,
-      message: "Product not found",
-    });
-  }
-  res.json({ sucess: true, message: "Here is your product", product });
 });
 
 const updateProduct = AsyncError(async (req, res, next) => {
-  if ((req.user.isAdmin = false)) {
-    res.json({
-      sucess: false,
-      message: "You are not authorized to do this.",
-    });
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      throw new BadRequestError("Input the product id ");
+    }
+    const product = await Product.findOne({ productId });
+    if (!product) {
+      throw new NotFoundError("Product not found");
+    }
+    const updatedProduct = await Product.findByIdAndUpdate(
+      product._id,
+      { $set: req.body },
+      { new: true }
+    );
+    await successResponse(
+      res,
+      200,
+      "Product updated successfully",
+      updatedProduct
+    );
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-
-  const updatedProduct = await Product.findByIdAndUpdate(
-    req.params.id,
-    { $set: req.body },
-    { new: true }
-  );
-  res.json({ sucess: true, message: "Product Updated", updatedProduct });
 });
 
 const deleteProduct = AsyncError(async (req, res, next) => {
-  if (!req.user && !req.user.isAdmin == truee) {
+  if (!req.user && !req.user.isAdmin == true) {
     res.json({
       sucess: false,
       message: "You are not authorized to do this",
@@ -146,5 +185,5 @@ module.exports = {
   getOneProduct,
   deleteProduct,
   uploadProductImages,
-  resizeproductImages
+  resizeproductImages,
 };
