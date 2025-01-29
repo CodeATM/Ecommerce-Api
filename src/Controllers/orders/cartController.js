@@ -1,12 +1,11 @@
 const express = require("express");
-const AppError = require("../../utils/ErrorHandler");
-const AsyncError = require("../../utils/AsyncError");
+// const AsyncError = require("../../utils/AsyncError");
 const Product = require("../../Model/ProductModel");
 const User = require("../../Model/userModel");
 const Cart = require("../../Model/cartModel");
 
 //get user cart
-const getCart = AsyncError(async (req, res) => {
+const getCart = async (req, res) => {
   const user = await User.findById(req.user);
 
   if (!user)
@@ -33,9 +32,9 @@ const getCart = AsyncError(async (req, res) => {
     message: "Here is your cart",
     cart,
   });
-});
+};
 
-const getAllCart = AsyncError(async (req, res) => {
+const getAllCart = async (req, res) => {
   const user = await User.findById(req.user);
 
   if (!user)
@@ -56,10 +55,10 @@ const getAllCart = AsyncError(async (req, res) => {
     message: "Here is your cart",
     cart,
   });
-});
+};
 
 //adding items to cart
-const addItemToCart = AsyncError(async (req, res) => {
+const addItemToCart = async (req, res) => {
   const user = await User.exists({ _id: req.user });
 
   if (!user)
@@ -105,10 +104,10 @@ const addItemToCart = AsyncError(async (req, res) => {
       newCart,
     });
   }
-});
+};
 
 // reduce cart quantity
-const decreaseQuantity = AsyncError(async (req, res) => {
+const decreaseQuantity = async (req, res) => {
   // use add product endpoint for increase quantity
   const user = await User.findById(req.user);
   const productId = req.body.productId;
@@ -141,9 +140,9 @@ const decreaseQuantity = AsyncError(async (req, res) => {
   res
     .status(400)
     .send({ status: false, message: "Item does not exist in cart" });
-});
+};
 
-const removeItem = AsyncError(async (req, res) => {
+const removeItem = async (req, res) => {
   let user = await User.findById(req.user);
   let productId = req.body.productId;
 
@@ -166,7 +165,7 @@ const removeItem = AsyncError(async (req, res) => {
   res
     .status(400)
     .send({ status: false, message: "Item does not exist in cart" });
-});
+};
 
 module.exports = {
   addItemToCart,

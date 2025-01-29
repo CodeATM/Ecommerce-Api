@@ -8,6 +8,7 @@ const {
   errorResponse,
 } = require("../../utils/responseHandler");
 const { BadRequestError, NotFoundError } = require("../ErrorController");
+const wishlist = require("../../Model/wishlist");
 
 const jsontoken = (id) => {
   return Jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -40,6 +41,7 @@ const registerUser = async (req, res, next) => {
   try {
     const user = await User.create(req.body);
     const token = jsontoken(user._id);
+    await wishlist.create({ user: user.id });
     const data = {
       userId: user._id,
       accessToken: token,

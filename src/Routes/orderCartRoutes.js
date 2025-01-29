@@ -10,10 +10,10 @@ router.post("/addItem", verifyJWT, addItemToCart);
 router.post("/removeItem", verifyJWT, removeItem)
 router.post("/decreaseQuanity", verifyJWT, decreaseQuantity);
 router.get("/cart", verifyJWT, getCart);
-router.get("/Allcart", verifyJWT, getAllCart);
+router.get("/allcart", verifyJWT, getAllCart);
 
 // Order routes
 
-router.get('/Checkout', Checkout )
+router.post('/checkout', Checkout )
 
 module.exports = router;

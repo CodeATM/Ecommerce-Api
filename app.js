@@ -68,8 +68,10 @@ app.use(passport.initialize());
 
 app.use("/user", require("./src/Routes/userRoutes"));
 app.use("/product", require("./src/Routes/productRoutes"));
-// app.use("/review", require("./src/Routes/reviewRoutes"));
-// app.use("/order", require("./src/Routes/orderCartRoutes"));
+app.use("/review", require("./src/Routes/reviewRoutes"));
+app.use("/collection", require("./src/Routes/collectionRoutes"));
+app.use("/wishlist", require("./src/Routes/wishlist"));
+app.use("/order", require("./src/Routes/orderCartRoutes"));
 
 app.all("*", (req, res, next) => {
   errorResponse(res, 404, "Not found");
